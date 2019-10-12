@@ -29,13 +29,10 @@ class Graph:
         :param int order: Direction of the edge. 0 is bidirectional, 1 means
             from `frm` to `to`, -1 means from `to` to `frm`.
         """
-        if order == 0:
-            self.adj_list[a][b] = weight
-            self.adj_list[b][a] = weight
-        elif order < 0:
-            self.adj_list[b][a] = weight
-        else:
-            self.adj_list[a][b] = weight
+        if order <= 0:
+            self.adj_list[to][frm] = weight
+        if order >= 0:
+            self.adj_list[frm][to] = weight
 
     def add_graph(self, g):
         """
