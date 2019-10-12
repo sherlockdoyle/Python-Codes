@@ -1,6 +1,6 @@
 # Graph algorithms
 
-This folder contains several Graph related algorithms with demos included. To run any of the demos, just add the correct import statement in `main.py` and run it.
+This folder contains several Graph related algorithms with demos included. To run any of the demos, just add the correct import statement in [`main.py`](/graph/main.py) and run it.
 
 ## Implemented algorithms
 - ### [Traversal](/graph/traversal)
