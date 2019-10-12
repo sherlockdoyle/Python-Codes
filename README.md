@@ -1,5 +1,5 @@
 # Python-Codes
-A storehouse of different algorithms in Python
+A storehouse of different algorithms in Python.
 
 ## Implemented algorithms
 - ### [Graph](/graph)
