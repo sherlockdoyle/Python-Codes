@@ -67,7 +67,7 @@ Bash like output redirection is also possible with Pawky.
 awk > 'out.txt'  # Output will be written (overwritten) to out.txt
 awk >> 'out.txt'  # Output will be written (appended) to out.txt
 ```
-Because of how Python works, you should use this separatly before calling `awk` for processing the files.
+Because of how Python works, you should use this separately before calling `awk` for processing the files.
 ```python
 awk < 'marks.txt' > 'out.txt'  # This line is interpreted as
 (awk < 'marks.txt') and ('marks.txt' > 'out.txt')
@@ -103,7 +103,7 @@ Now specify another function for the rest of the lines. Note the use of the slic
 ```python
 awk[2:] = lambda r: print(r, '# Student')  # This will print the line 2 and above
 ```
-And just for fun we'll also print every third line starting from the second line upto the seventh line separatly too. Again, note the use of the slice operator.
+And just for fun we'll also print every third line starting from the second line up to the seventh line separately too. Again, note the use of the slice operator.
 ```python
 awk[2:8:3] = lambda r: print(r, '# Fun')  # 8 since stop is exclusive
 ```
@@ -125,7 +125,7 @@ Mac        25      81       6   10 # Student
 ```
 
 ### Negative Indices
-By default, when specifying line numbers or slices, only positive values are supported as indices. With positive indices, the line numbers are matched for each file separatly. It's like matching NR in `awk`.
+By default, when specifying line numbers or slices, only positive values are supported as indices. With positive indices, the line numbers are matched for each file separately. It's like matching NR in `awk`.
 ```
 NR=1{print}
 NR>1{print}
@@ -155,7 +155,7 @@ awk[0, 'a$'] = print  # If using int to access the fields, then it's 0-indexed
 ```
 
 ## Accessing Fields
-Fields in the records can be accessed almost in the same way as in `awk`. To print the first field of each record, you can do one of the following:
+Fields in the records can be accessed almost in the same way as in `awk`. To print the first field of each record, you can do one of the followings:
 ```python
 awk[:] = lambda r: print(r['$1'])  # awk like $ syntax
 awk[:] = lambda r: print(r['S1'])  # because S looks like $
