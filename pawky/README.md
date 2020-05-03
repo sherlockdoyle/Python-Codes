@@ -179,7 +179,7 @@ awk[:] = lambda r: print(r[0])
 The fields can be set in the same way they're accessed.
 ```python
 record['$1'] = 'value'  # will set the first field and update the record
-record['$0'] = 'value'  # will set the records and update the field
+record['$0'] = 'value'  # will set the record and update the fields
 record['$10'] = 'value'  # (assuming there are < 10 fields) will set the field, update the record and change NF.
 record[0] = 'value'  # will set the first field and update the record, 0-indexed
 ```
