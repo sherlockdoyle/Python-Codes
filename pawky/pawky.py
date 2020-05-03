@@ -1,4 +1,4 @@
-import sys, re
+import sys, re, math
 
 BEGIN = 'BEGIN'
 END = 'END'
@@ -28,10 +28,11 @@ class Pawky:
     :ivar function end: If not `None`, this function is called after processing all files.
     :ivar dict refun: Contains the pattern and the funtion to call when the pattern matches for each line.
     """
-    def __init__(self, fs=' +', autoparse=False):
+    def __init__(self, fs=r'[ \t\n]+', autoparse=False):
         """Initializes the `Pawky` class.
         
-        :param str fs: The field separator (regular expression) to use for splitting the records. Defaults to ' +'.
+        :param str fs: The field separator (regular expression) to use for splitting the records. Defaults to
+                       '[ \\t\\n]+'.
         :param bool autoparse: If `True`, possible fields are automatically parsed to `int` or `float`. Defaults to
                                False.
         """
@@ -55,8 +56,94 @@ class Pawky:
         self.refun = {}
 
         self.autoparse = autoparse
+        self.__record = None
         self.__old_stdout = None
+
+    def gsub(self, r, s, t=None):
+        """Global substitution, every match of regular expression r in variable t is replaced by string s. The replaced
+        string and the number of replacements is returned. If t is omitted, $0 is used. An \i in the replacement string
+        s is replaced by the ith matched group of t. \\\\ (two backslashes) put literal \ in the replacement string. For
+        a `awk` like replacement, wrap the pattern r in (), and use \\1 (single backslash) instead of &.
+
+        :return: Tuple with (replaced string, number of replacements).
+        :rtype: tuple
+        """
+        if t is None:
+            t = self.__record['$0']
+        return re.subn(r, s, t, flags=self.IGNORECASE)
     
+    def index(self, s, t):
+        """If t is a substring of s, then the position where t starts is returned, else 0 is returned. The first
+        character of s is in position 1."""
+        try:
+            return s.index(t) + 1
+        except:
+            return 0
+
+    def length(self, s):
+        """Returns the length of string s."""
+        return len(s)
+
+    def match(self, s, r):
+        """Returns the index of the first longest match of regular expression r in string s. Returns 0 if no match. As a
+        side effect, RSTART is set to the return value. RLENGTH is set to the length of the match or -1 if no match. If
+        the empty string is matched, RLENGTH is set to 0, and 1 is returned if the match is at the front, and
+        length(s)+1 is returned if the match is at the back."""
+        m = re.search(r, s, flags=self.IGNORECASE)
+        if m is None:
+            self.RSTART = 0
+            self.RLENGTH = -1
+        else:
+            s = m.span()
+            self.RSTART = s[0] + 1
+            self.RLENGTH = s[1] - s[0]
+        return self.RSTART
+
+    def split(self, s, A=None, r=None):
+        """String s is split into fields by regular expression r and the fields are loaded into array A. If A is
+        omitted, fields is returned. Otherwise, A is assumed to be a list and the fields are loaded into it and the
+        number of fields is returned. If r is omitted, FS is used."""
+        if r is None:
+            r = self.FS
+        s = str(s)
+        if r == ' ':
+            s = s.strip()
+            r = r'[ \t\n]+'
+        fields = re.split(r, s)
+        if A is None:
+            return fields
+        else:
+            A.clear()
+            A.extend(fields)
+            return len(A)
+    
+    def sprintf(self, format, expr_list):
+        """Returns a string constructed from expr_list according to format. Uses Python's % operator with strings."""
+        return format % expr_list
+
+    def sub(self, r, s, t=None):
+        """Single substitution, same as gsub() except at most one substitution.
+
+        :return: Tuple with (replaced string, number of replacements).
+        :rtype: tuple
+        """
+        if t is None:
+            t = self.__record['$0']
+        return re.subn(r, s, t, count=1, flags=self.IGNORECASE)
+
+    def substr(self, s, i, n=None):
+        """Returns the substring of string s, starting at index i, of length n. If n is omitted, the suffix of s,
+        starting at i is returned."""
+        return s[i:] if n is None else s[i:i+n]
+    
+    def tolower(self, s):
+        """Returns a copy of s with all upper case characters converted to lower case."""
+        return s.lower()
+
+    def toupper(self, s):
+        """Returns a copy of s with all lower case characters converted to upper case."""
+        return s.upper()
+
     def __setitem__(self, key, value):
         """Assigns functions to run on pattern match. This is used to insert values into `Pawky.refun`.
         Use this like `awk[<pattern>] = f`, where f is a function that will run if the pattern matches. Supported
@@ -67,14 +154,14 @@ class Pawky:
           * `awk[...] = f`, `awk[:] = f`, `awk[::] = f`: Sets `Pawky.mid`, the function that will be called for each
             line of each file.
           * `awk[n] = f`: The function that will be called for the nth line. If n is positive, it'll be called for the
-            nth line of each file; it's like comparing with NR. If n is negative, it'll be called for the nth line of
-            all the files; it's like comparing with FNR. In either case, the absolute value of n is used for indexing.
-            Note that, just like in `awk`, here too it's 1-indexed.
+            nth line of all the files together; it's like comparing with NR. If n is negative, it'll be called for the
+            nth line of each file separately; it's like comparing with FNR. In either case, the absolute value of n is
+            used for indexing. Note that, just like in `awk`, here too it's 1-indexed.
           * `awk[a:b:c] = f`: The function that will be called for every cth line starting from the ath (inclusive) line
             upto the bth (exclusive) line. The slices behaves the same way as normal Python slices, but negative values
-            for a and b are not allowed. If c is positive, the slices represents line numbers for each file separately.
-            If c is negative, the slices represents line numbers for all files together. In either case, the absolute
-            value of c is used as the step size. Note that, just like in `awk`, here too it's 1-indexed.
+            for a and b are not allowed. If c is positive, the slices represents line numbers for all the files
+            together. If c is negative, the slices represents line numbers for each file separately. In either case, the
+            absolute value of c is used as the step size. Note that, just like in `awk`, here too it's 1-indexed.
           * `awk['pattern'] = f`: Calls the function if the record matches the regular expression pattern.
           * `awk[field, 'pattern'] = f`: Calls the function if the field matches the regular expression pattern. The
             field is used as `record[field]`.
@@ -97,23 +184,38 @@ class Pawky:
         else:  # str or int or (field, str)
             self.refun[key] = value
 
-    def __call__(self, *fns, fs=' +', asregex=True):
+    def __getattribute__(self, name):
+        """Return the attributes of Pawky and allows for calling arithmetic functions directly from the math module.
+        
+        :param str name: The attribute name.
+        :return: The attribute value.
+        """
+        try:
+            return super().__getattribute__(name)
+        except AttributeError:
+            return getattr(math, name)
+
+    def __call__(self, *fns, fs=r'[ \t\n]+', asregex=True):
         """Processes all the files passed.
         Since there's no way to know how many times this will be called, unlike `awk`, here BEGIN and END are called
         once everytime this is called. So, everytime this method is called, functions are called in the order: BEGIN,
         Process all the files, END. This will also match the records with the patterns and run the functions. The order
         in which the functions are called is not defined. Except BEGIN and END, a instance of Record for each line will
         be passed to all the functions.
+
+        Note that, this'll reset FNR to 0 everytime this is called, before processing any files. This'll also reset NR
+        to 0 before processing each of the files, just like in `awk`.
         
-        :param str fns: A list of files to process.
-        :param str fs: The file separator (regular expression) to use for the files, defaults to ' +'. This will change
-                       FS.
+        :param str fns: The files to process.
+        :param str fs: The file separator (regular expression) to use for the files, defaults to '[ \\t\\n]+'. This will
+                       change FS.
         :param bool asregex: If True, fs is used as a regular expression, otherwise it is used as it is, like a string.
                              Defaults to True.
         """
         self.FS = fs if asregex else re.escape(fs)
         if self.begin is not None:
             self.begin()
+        self.FNR = 0
         for fn in fns:
             self.FILENAME = fn
             with open(self.FILENAME) as f:
@@ -121,35 +223,40 @@ class Pawky:
                 for record in re.split(self.RS, f.read()):
                     self.FNR += 1
                     self.NR += 1
-                    r = Record(self, record)
+                    self.__record = Record(self, record)
                     if self.mid is not None:
-                        self.mid(r)
+                        self.mid(self.__record)
                     for k in self.refun:
                         if isinstance(k, int):
                             if (k > 0 and k == self.NR) or (k < 0 and -k == self.FNR):
-                                self.refun[k](r)
+                                self.refun[k](self.__record)
                         elif isinstance(k, str):
                             if re.search(k, record, re.IGNORECASE if self.IGNORECASE else 0):
-                                self.refun[k](r)
+                                self.refun[k](self.__record)
                         elif isinstance(k, tuple):
                             if len(k) == 2:
-                                if re.search(k[1], str(r[k[0]]), re.IGNORECASE if self.IGNORECASE else 0):
-                                    self.refun[k](r)
+                                if re.search(k[1], str(self.__record[k[0]]), re.IGNORECASE if self.IGNORECASE else 0):
+                                    self.refun[k](self.__record)
                             elif len(k) == 3:
                                 i = self.NR if k[2] > 0 else self.FNR
                                 if (k[1] is None or i < k[1]) and i >= k[0] and (i - k[0]) % k[2] == 0:
-                                    self.refun[k](r)
+                                    self.refun[k](self.__record)
         if self.end is not None:
             self.end()
     
     def __lt__(self, value):
-        """Used to simulate input redirection. This allows to call Pawky with a file as `awk < 'filename'`.
+        """Used to simulate input redirection. This allows to call Pawky with a file as `awk < 'filename'`. The input
+        can either be a file name or a iterator of file names. This is same as `__call__`, only without the keyword
+        arguments.
 
-        :param str value: File name.
+        :param value: File name.
         :return: The current instance.
         :rtype: Pawky
         """
-        self.__call__(value)
+        if isinstance(value, str):
+            self(value)
+        else:
+            self(*value)
         return self
     
     def __redirect_stdout(self, value, mode):

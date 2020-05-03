@@ -2,7 +2,7 @@
 ### The Python version of `awk`.
 
 ## Why Pawky?
-Pawky is just a for fun project to design a `awk` like program in Python. Pawky is neither a recreation of `awk` nor a `awk` parser. Pawky allows you to use a `awk` like syntax in Python to easily process files. Most of the builtin `awk` variables and functions are available, but most of them need to be used manually.
+Pawky is just a for-fun project to design a `awk` like program in Python. Pawky is neither a recreation of `awk` nor a `awk` parser. Pawky allows you to use a `awk` like syntax in Python to easily process files. Most of the builtin `awk` variables and functions are available, but most of them need to be used manually.
 
 ## Get Started
 Start by importing Pawky and creating an instance of Pawky.
@@ -15,13 +15,14 @@ To process files, call the instance (`awk`) and pass the file names. By default,
 ```python
 awk('file1.txt', 'file2.txt', ...)
 ```
-To specify a field separator, pass that as a keyword argument.
+To specify a field separator, pass that as a keyword argument. By default, the field separator is used as a regular expression. To use it as it is, pass a third keyword argument, `asregex=False`.
 ```python
 awk('marks.txt', fs='\t')
 ```
-You can also use the input redirection syntax from Bash to process the files. This way, you can only process one file at a time and can't set the field separator.
+You can also use the input redirection syntax from Bash to process the files. This way, however, you can't set the field separator.
 ```python
-awk < 'marks.txt'
+awk < 'marks.txt'  # For a single file
+awk < ('marks1.txt', 'marks2.txt')  # For multiple files
 ```
 
 ### Specifying Functions
@@ -46,17 +47,17 @@ awk('file1.txt')
 awk('file2.txt')
 # Functions will be executed as:
 # BEGIN
-# file1.txt
+# Process file1.txt
 # END
 # BEGIN
-# file2.txt
+# Process file2.txt
 # END
 
 awk('file1.txt', 'file2.txt')
 # Functions will be executed as:
 # BEGIN
-# file1.txt
-# file2.txt
+# Process file1.txt
+# Process file2.txt
 # END
 ```
 If either of `Pawky.begin`, `Pawky.mid` or `Pawky.end` is None, it is ignored.
@@ -125,12 +126,12 @@ Mac        25      81       6   10 # Student
 ```
 
 ### Negative Indices
-By default, when specifying line numbers or slices, only positive values are supported as indices. With positive indices, the line numbers are matched for each file separately. It's like matching NR in `awk`.
+By default, when specifying line numbers or slices, only positive values are supported as indices. With positive indices, the line numbers are matched for all the files together. It's like matching NR in `awk`.
 ```
 NR=1{print}
 NR>1{print}
 ```
-But if negative indices are used or a negative step size is used in slices, the line numbers are matched for all files together. Obviously, the absolute value of the indices and step size will be used for comparison. The start and stop for slices must still be positive. Negative indices are like matching FNR in `awk`.
+But if negative indices are used or a negative step size is used in slices, the line numbers are matched for each file separately. Obviously, the absolute value of the indices and step size will be used for comparison. The start and stop for slices must still be positive. Negative indices are like matching FNR in `awk`.
 ```
 FNR=1{print}
 FNR>1{print}
@@ -186,6 +187,3 @@ Note that, unlike accessing, the dot based syntax can't be used to set the field
 
 ## What's more?
 Read the in-code documentation for more info.
-
-### TODO
-  * Implement the builtin functions.
