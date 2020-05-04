@@ -10,7 +10,6 @@ def begin():
 awk['BEGIN'] = begin  # Called at the beginning
 
 def header(r):
-    print(r.match('asdf', 'a'))
     print(r, 'Total')
 awk[1] = header  # Called for the first line
 
