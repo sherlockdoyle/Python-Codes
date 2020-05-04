@@ -1,8 +1,12 @@
 # Pawky
 ### The Python version of `awk`.
+#### awk
+  > **pattern scanning and text processing language**
+  >
+  > The [AWK](http://man7.org/linux/man-pages/man1/awk.1p.html) language is useful for manipulation of data files, text retrieval and processing, and for prototyping and experimenting with algorithms. [It](https://en.wikipedia.org/wiki/AWK) is a data-driven scripting language consisting of a set of actions to be taken against streams of textual data – either run directly on files or used as part of a pipeline – for purposes of extracting or transforming text, such as producing formatted reports.
 
 ## Why Pawky?
-Pawky is just a for-fun project to design a `awk` like program in Python. Pawky is neither a recreation of `awk` nor a `awk` parser. Pawky allows you to use a `awk` like syntax in Python to easily process files. Most of the builtin `awk` variables and functions are available, but most of them need to be used manually.
+Pawky is just a for-fun project to design a `awk` like program in Python. Pawky is neither a recreation of `awk` nor a `awk` parser. Pawky allows you to use a `awk` like syntax in Python to easily process files. Most of the builtin `awk` variables and functions are available, but most of them need to be used manually. Pawky tries to give a shell like feel (syntax), but the more usual Python syntax is recommended. Follow the codes below and try each snippet; trying random code is the best way to learn.
 
 ## Get Started
 Start by importing Pawky and creating an instance of Pawky.
@@ -187,3 +191,6 @@ Note that, unlike accessing, the dot based syntax can't be used to set the field
 
 ## What's more?
 Read the in-code documentation for more info.
+
+## TODO
+  * Allow changing of NF to manipulate fields.
